@@ -1,0 +1,43 @@
+menu "GNSS-Parser"
+	config GNSS_PARSER_UART_INTERFACE
+		int "UART port number"
+		range 0 2
+		default 1
+		help
+			UART communication port number for the driver.
+			See UART documentation for available port numbers.
+
+	config GNSS_PARSER_UART_RX
+		int "UART RXD pin number"
+		default 5
+		help
+			GPIO number for UART RX pin. See UART documentation for more information
+			about available pin numbers for UART.
+
+	choice
+		prompt "Baud rate"
+
+		config GNSS_PARSER_BAUD_9600
+			bool "9600"
+
+		config GNSS_PARSER_BAUD_19200
+			bool "19200"
+
+		config GNSS_PARSER_BAUD_38400
+			bool "38400"
+
+		config GNSS_PARSER_BAUD_57600
+			bool "57600"
+
+		config GNSS_PARSER_BAUD_115200
+			bool "115200"
+	endchoice
+
+	config GNSS_PARSER_UART_BAUD
+		int
+		default 9600 if GNSS_PARSER_BAUD_9600
+		default 19200 if GNSS_PARSER_BAUD_19200
+		default 38400 if GNSS_PARSER_BAUD_38400
+		default 57600 if GNSS_PARSER_BAUD_57600
+		default 115200 if GNSS_PARSER_BAUD_115200
+endmenu

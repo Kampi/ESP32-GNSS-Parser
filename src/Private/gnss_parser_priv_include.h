@@ -20,9 +20,12 @@
 #ifndef GNSS_PARSER_PRIV_INCLUDE_H_
 #define GNSS_PARSER_PRIV_INCLUDE_H_
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "gnss_parser_defs.h"
 
-/** @brief GNSS parser library runtime structure.
+/** @brief GNSS parser library run time structure.
  */
 typedef struct
 {
@@ -30,14 +33,12 @@ typedef struct
     uint8_t CurrentItemNumber;                      /**< Current item number. */
     bool isAsterisk;                                /**< Asterisk detected flag. */
     uint8_t CRC;                                    /**< Calculated CRC value. */
-    uint8_t MessageFormat;                          /**< Message format mask. */
+    uint8_t ReceivedMessages;                       /**< Received messages mask. */
     uint8_t SatNumber;                              /**< Satellite number. */
     uint8_t SatCount;                               /**< Satellite count. */
     GNSS_Format_t CurrentFormat;                    /**< Current message format ID. */
-    uint32_t AllStatements;                         /**< All statements mask. */
     char Item[16];                                  /**< Current item. */
     GNSS_Data_t Parent;                             /**< Parent class. */
-    //esp_event_loop_handle_t event_loop_hdl;        /**< Event loop handle */
 } GNSS_RT_t;
 
 /** @brief          Converter two continuous numeric character into a number.

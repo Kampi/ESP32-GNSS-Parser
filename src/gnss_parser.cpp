@@ -45,27 +45,25 @@ static uart_config_t _GNSS_UART_Config = {
 #endif
 };
 
-/**
- * @brief Define of NMEA Parser Event base
- *
+/** @brief Define the GNSS parser event base.
  */
-ESP_EVENT_DEFINE_BASE(ESP_NMEA_EVENT);
+ESP_EVENT_DEFINE_BASE(GNSS_PARSER_EVENT);
 
 static GNSS_RT_t _GNSS_Parser_RunTime;
 
 static const char* TAG = "GNSS-Parser";
 
-/** @brief  Parse a received item.
- *  @return #true when successful
+/** @brief Parse a received item.
  */
-static bool GNSS_Receiver_ParseItem(void)
+static void GNSS_Receiver_ParseItem(void)
 {
     if((_GNSS_Parser_RunTime.CurrentItemNumber == 0) && (_GNSS_Parser_RunTime.Item[0] == '$'))
     {
-        #ifdef CONFIG_NMEA_STATEMENT_GGA
+        _GNSS_Parser_RunTime.CurrentFormat = GNSS_FORMAT_UNKNOWN;
+
+        #ifdef CONFIG_GNSS_PARSER_FORMAT_GGA
             if(strstr(_GNSS_Parser_RunTime.Item, "GGA"))
             {
-                GNSS_Parser_Parse_GGA(&_GNSS_Parser_RunTime);
                 _GNSS_Parser_RunTime.CurrentFormat = GNSS_FORMAT_GGA;
             }
         #endif
@@ -73,7 +71,6 @@ static bool GNSS_Receiver_ParseItem(void)
         #ifdef CONFIG_GNSS_PARSER_FORMAT_GSA
             if(strstr(_GNSS_Parser_RunTime.Item, "GSA"))
             {
-                GNSS_Parser_Parse_GSA(&_GNSS_Parser_RunTime);
                 _GNSS_Parser_RunTime.CurrentFormat = GNSS_FORMAT_GSA;
             }
         #endif
@@ -81,7 +78,6 @@ static bool GNSS_Receiver_ParseItem(void)
         #ifdef CONFIG_GNSS_PARSER_FORMAT_GSV
             if(strstr(_GNSS_Parser_RunTime.Item, "GSV"))
             {
-                GNSS_Parser_Parse_GSV(&_GNSS_Parser_RunTime);
                 _GNSS_Parser_RunTime.CurrentFormat = GNSS_FORMAT_GSV;
             }
         #endif
@@ -89,7 +85,6 @@ static bool GNSS_Receiver_ParseItem(void)
         #ifdef CONFIG_GNSS_PARSER_FORMAT_RMC
             if(strstr(_GNSS_Parser_RunTime.Item, "RMC"))
             {
-                GNSS_Parser_Parse_RMC(&_GNSS_Parser_RunTime);
                 _GNSS_Parser_RunTime.CurrentFormat = GNSS_FORMAT_RMC;
             }
         #endif
@@ -97,7 +92,6 @@ static bool GNSS_Receiver_ParseItem(void)
         #ifdef CONFIG_GNSS_PARSER_FORMAT_GLL
             if(strstr(_GNSS_Parser_RunTime.Item, "GLL"))
             {
-                GNSS_Parser_Parse_GLL(&_GNSS_Parser_RunTime);
                 _GNSS_Parser_RunTime.CurrentFormat = GNSS_FORMAT_GLL;
             }
         #endif
@@ -105,21 +99,52 @@ static bool GNSS_Receiver_ParseItem(void)
         #ifdef CONFIG_GNSS_PARSER_FORMAT_VTG
             if(strstr(_GNSS_Parser_RunTime.Item, "VTG"))
             {
-                GNSS_Parser_Parse_VTG(&_GNSS_Parser_RunTime);
                 _GNSS_Parser_RunTime.CurrentFormat = GNSS_FORMAT_VTG;
             }
         #endif
-        else
-        {
-            _GNSS_Parser_RunTime.CurrentFormat = GNSS_FORMAT_UNKNOWN;
-        }
+    }
 
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    #ifdef CONFIG_GNSS_PARSER_FORMAT_GGA
+        if(_GNSS_Parser_RunTime.CurrentFormat == GNSS_FORMAT_GGA)
+        {
+            GNSS_Parser_Parse_GGA(&_GNSS_Parser_RunTime);
+        }
+    #endif
+
+    #ifdef CONFIG_GNSS_PARSER_FORMAT_GSA
+        if(_GNSS_Parser_RunTime.CurrentFormat == GNSS_FORMAT_GSA)
+        {
+            GNSS_Parser_Parse_GSA(&_GNSS_Parser_RunTime);
+        }
+    #endif
+
+    #ifdef CONFIG_GNSS_PARSER_FORMAT_GSV
+        if(_GNSS_Parser_RunTime.CurrentFormat == GNSS_FORMAT_GSV)
+        {
+            GNSS_Parser_Parse_GSV(&_GNSS_Parser_RunTime);
+        }
+    #endif
+
+    #ifdef CONFIG_GNSS_PARSER_FORMAT_RMC
+        if(_GNSS_Parser_RunTime.CurrentFormat == GNSS_FORMAT_RMC)
+        {
+            GNSS_Parser_Parse_RMC(&_GNSS_Parser_RunTime);
+        }
+    #endif
+
+    #ifdef CONFIG_GNSS_PARSER_FORMAT_GLL
+        if(_GNSS_Parser_RunTime.CurrentFormat == GNSS_FORMAT_GLL)
+        {
+            GNSS_Parser_Parse_GLL(&_GNSS_Parser_RunTime);
+        }
+    #endif
+
+    #ifdef CONFIG_GNSS_PARSER_FORMAT_VTG
+        if(_GNSS_Parser_RunTime.CurrentFormat == GNSS_FORMAT_VTG)
+        {
+            GNSS_Parser_Parse_VTG(&_GNSS_Parser_RunTime);
+        }
+    #endif
 }
 
 /** @brief          Parse NMEA statements from the GNSS receiver.
@@ -171,15 +196,16 @@ static void GNSS_Receiver_Decode(GNSS_Parser_t* p_Parser)
 
             CRC = static_cast<uint8_t>(strtol(_GNSS_Parser_RunTime.Item, NULL, 16));
 
-            if(true)
+            if(_GNSS_Parser_RunTime.CRC == CRC)
             {
                 switch(_GNSS_Parser_RunTime.CurrentFormat)
                 {
                     #ifdef CONFIG_GNSS_PARSER_FORMAT_GGA
                         case GNSS_FORMAT_GGA:
                         {
-                            ESP_LOGI(TAG, "GGA parsed");
-                            _GNSS_Parser_RunTime.MessageFormat |= 0x01 << GNSS_FORMAT_GGA;
+                            ESP_LOGD(TAG, "GGA parsed");
+
+                            _GNSS_Parser_RunTime.ReceivedMessages |= GNSS_FORMAT_GGA;
 
                             break;
                         }
@@ -187,23 +213,31 @@ static void GNSS_Receiver_Decode(GNSS_Parser_t* p_Parser)
                     #ifdef CONFIG_GNSS_PARSER_FORMAT_GSA
                         case GNSS_FORMAT_GSA:
                         {
-                            _GNSS_Parser_RunTime.MessageFormat |= 0x01 << GNSS_FORMAT_GSA;
+                            ESP_LOGD(TAG, "GSA parsed");
+
+                            _GNSS_Parser_RunTime.ReceivedMessages |= GNSS_FORMAT_GSA;
+
                             break;
                         }
                     #endif
                     #ifdef CONFIG_GNSS_PARSER_FORMAT_RMC
                         case GNSS_FORMAT_RMC:
                         {
-                            _GNSS_Parser_RunTime.MessageFormat |= 0x01 << GNSS_FORMAT_RMC;
+                            ESP_LOGD(TAG, "RMC parsed");
+
+                            _GNSS_Parser_RunTime.ReceivedMessages |= GNSS_FORMAT_RMC;
+
                             break;
                         }
                     #endif
                     #ifdef CONFIG_GNSS_PARSER_FORMAT_GSV
                         case GNSS_FORMAT_GSV:
                         {
+                            ESP_LOGD(TAG, "GSV parsed");
+
                             if(_GNSS_Parser_RunTime.SatNumber == _GNSS_Parser_RunTime.SatCount)
                             {
-                                _GNSS_Parser_RunTime.MessageFormat |= 0x01 << GNSS_FORMAT_GSV;
+                                _GNSS_Parser_RunTime.ReceivedMessages |= GNSS_FORMAT_GSV;
                             }
 
                             break;
@@ -212,15 +246,19 @@ static void GNSS_Receiver_Decode(GNSS_Parser_t* p_Parser)
                     #ifdef CONFIG_GNSS_PARSER_FORMAT_GLL
                         case GNSS_FORMAT_GLL:
                         {
-                            _GNSS_Parser_RunTime.MessageFormat |= 0x01 << GNSS_FORMAT_GLL;
+                            ESP_LOGD(TAG, "GLL parsed");
+
+                            _GNSS_Parser_RunTime.ReceivedMessages |= GNSS_FORMAT_GLL;
 
                             break;
                         }
                     #endif
-                    #ifdef CONFIG_NMEA_STATEMENT_VTG
+                    #ifdef CONFIG_GNSS_PARSER_FORMAT_VTG
                         case GNSS_FORMAT_VTG:
                         {
-                            _GNSS_Parser_RunTime.MessageFormat |= 0x01 << GNSS_FORMAT_VTG;
+                            ESP_LOGD(TAG, "VTG parsed");
+
+                            _GNSS_Parser_RunTime.ReceivedMessages |= GNSS_FORMAT_VTG;
 
                             break;
                         }
@@ -231,25 +269,21 @@ static void GNSS_Receiver_Decode(GNSS_Parser_t* p_Parser)
                     }
                 }
 
-                /* Check if all statements have been parsed */
-                if(((_GNSS_Parser_RunTime.MessageFormat) & _GNSS_Parser_RunTime.AllStatements) == _GNSS_Parser_RunTime.AllStatements)
+                // All messages parsed?
+                if((p_Parser->Internal.MessageFilter & _GNSS_Parser_RunTime.ReceivedMessages) == p_Parser->Internal.MessageFilter)
                 {
-                    _GNSS_Parser_RunTime.MessageFormat = GNSS_FORMAT_UNKNOWN;
-                    /*
-                    esp_event_post_to(_GNSS_Parser_RunTime.event_loop_hdl, ESP_NMEA_EVENT, GNSS_UPDATE,
-                                      &(_GNSS_Parser_RunTime.Parent), sizeof(GNSS_t), 100 / portTICK_PERIOD_MS);*/
+                    _GNSS_Parser_RunTime.ReceivedMessages = GNSS_FORMAT_UNKNOWN;
+                    esp_event_post_to(p_Parser->Internal.EventLoop_Handle, GNSS_PARSER_EVENT, GNSS_EVENT_UPDATE, &_GNSS_Parser_RunTime.Parent, sizeof(GNSS_Data_t), 100 / portTICK_PERIOD_MS);
                 }
             }
             else
             {
-                ESP_LOGE(TAG, "CRC Error for statement:%s", p_Parser->Internal.p_Buffer);
+                ESP_LOGE(TAG, "CRC error for statement: %s", p_Parser->Internal.p_Buffer);
             }
 
             if(_GNSS_Parser_RunTime.CurrentFormat == GNSS_FORMAT_UNKNOWN)
             {
-                /* Send signal to notify that one unknown statement has been met */
-                //esp_event_post_to(_GNSS_Parser_RunTime.event_loop_hdl, ESP_NMEA_EVENT, GNSS_UNKNOWN,
-                //                  _GNSS_Parser_RunTime.buffer, len, 100 / portTICK_PERIOD_MS);
+                esp_event_post_to(p_Parser->Internal.EventLoop_Handle, GNSS_PARSER_EVENT, GNSS_EVENT_UNKNOWN, p_Parser->Internal.p_Buffer, strlen((const char*)p_Parser->Internal.p_Buffer), 100 / portTICK_PERIOD_MS);
             }
         }
         // All other characters.
@@ -290,7 +324,7 @@ static void GNSS_Parser_Event(void* p_Arg)
                 }
                 case UART_FIFO_OVF:
                 {
-                    ESP_LOGW(TAG, "HW FIFO Overflow");
+                    ESP_LOGW(TAG, "HW FIFO overflow");
 
                     uart_flush(Parser->UART.Interface);
                     xQueueReset(Parser->Internal.MessageQueue);
@@ -299,7 +333,7 @@ static void GNSS_Parser_Event(void* p_Arg)
                 }
                 case UART_BUFFER_FULL:
                 {
-                    ESP_LOGW(TAG, "Ring Buffer Full");
+                    ESP_LOGW(TAG, "Ring buffer full");
 
                     uart_flush(Parser->UART.Interface);
                     xQueueReset(Parser->Internal.MessageQueue);
@@ -308,20 +342,14 @@ static void GNSS_Parser_Event(void* p_Arg)
                 }
                 case UART_BREAK:
                 {
-                    ESP_LOGW(TAG, "Rx Break");
-
                     break;
                 }
                 case UART_PARITY_ERR:
                 {
-                    ESP_LOGE(TAG, "Parity Error");
-
                     break;
                 }
                 case UART_FRAME_ERR:
                 {
-                    ESP_LOGE(TAG, "Frame Error");
-
                     break;
                 }
                 case UART_PATTERN_DET:
@@ -343,7 +371,7 @@ static void GNSS_Parser_Event(void* p_Arg)
                     }
                     else
                     {
-                        ESP_LOGW(TAG, "Pattern Queue Size too small");
+                        ESP_LOGW(TAG, "No pattern found!");
 
                         uart_flush_input(Parser->UART.Interface);
                     }
@@ -358,43 +386,65 @@ static void GNSS_Parser_Event(void* p_Arg)
                 }
             }
         }
+
+        esp_event_loop_run(Parser->Internal.EventLoop_Handle, 10);
     }
 
     vTaskDelete(NULL);
 }
 
-GNSS_Error_t GNSS_Parser_Init(GNSS_Parser_t& p_Parser)
+GNSS_Error_t GNSS_Parser_Init(GNSS_Parser_t& p_Parser, uint8_t FilterMask)
 {
     uint8_t Flags;
+    esp_event_loop_args_t EventArgs;
 
     esp_log_level_set("uart", ESP_LOG_NONE);
 
     _GNSS_UART_Config.baud_rate = p_Parser.UART.Baudrate;
 
-    #ifdef CONFIG_GNSS_PARSER_FORMAT_GSA
-        _GNSS_Parser_RunTime.AllStatements |= (0x01 << GNSS_FORMAT_GSA);
+    #ifndef CONFIG_GNSS_PARSER_FORMAT_GSA
+        if((FilterMask & GNSS_FORMAT_GSA) == GNSS_FORMAT_GSA)
+        {
+            return GNSS_ERR_INVALID_ARG;
+        }
     #endif
 
-    #ifdef CONFIG_GNSS_PARSER_FORMAT_GSV
-        _GNSS_Parser_RunTime.AllStatements |= (0x01 << GNSS_FORMAT_GSV);
+    #ifndef CONFIG_GNSS_PARSER_FORMAT_GSV
+        if((FilterMask & GNSS_FORMAT_GSV) == GNSS_FORMAT_GSV)
+        {
+            return GNSS_ERR_INVALID_ARG;
+        }
     #endif
 
-    #ifdef CONFIG_GNSS_PARSER_FORMAT_GGA
-        _GNSS_Parser_RunTime.AllStatements |= (0x01 << GNSS_FORMAT_GGA);
+    #ifndef CONFIG_GNSS_PARSER_FORMAT_GGA
+        if((FilterMask & GNSS_FORMAT_GGA) == GNSS_FORMAT_GGA)
+        {
+            return GNSS_ERR_INVALID_ARG;
+        }
     #endif
 
-    #ifdef CONFIG_GNSS_PARSER_FORMAT_RMC
-        _GNSS_Parser_RunTime.AllStatements |= (0x01 << GNSS_FORMAT_RMC);
+    #ifndef CONFIG_GNSS_PARSER_FORMAT_RMC
+        if((FilterMask & GNSS_FORMAT_RMC) == GNSS_FORMAT_RMC)
+        {
+            return GNSS_ERR_INVALID_ARG;
+        }
     #endif
 
-    #ifdef CONFIG_GNSS_PARSER_FORMAT_GLL
-        _GNSS_Parser_RunTime.AllStatements |= (0x01 << GNSS_FORMAT_GLL);
+    #ifndef CONFIG_GNSS_PARSER_FORMAT_GLL
+        if((FilterMask & GNSS_FORMAT_GLL) == GNSS_FORMAT_GLL)
+        {
+            return GNSS_ERR_INVALID_ARG;
+        }
     #endif
 
-    #ifdef CONFIG_GNSS_PARSER_FORMAT_VTG
-        _GNSS_Parser_RunTime.AllStatements |= (0x01 << GNSS_FORMAT_VTG);
+    #ifndef CONFIG_GNSS_PARSER_FORMAT_VTG
+        if((FilterMask & GNSS_FORMAT_VTG) == GNSS_FORMAT_VTG)
+        {
+            return GNSS_ERR_INVALID_ARG;
+        }
     #endif
 
+    p_Parser.Internal.MessageFilter = FilterMask;
     p_Parser.Internal.isInitialized = false;
 
     p_Parser.Internal.p_Buffer = (uint8_t*)malloc(CONFIG_GNSS_PARSER_UART_BUFFER_SIZE);
@@ -403,7 +453,7 @@ GNSS_Error_t GNSS_Parser_Init(GNSS_Parser_t& p_Parser)
         return GNSS_ERR_FAIL;
     }
 
-    #if CONFIG_GNSS_PARSER_UART_IRAM
+    #ifdef CONFIG_GNSS_PARSER_UART_IRAM
         Flags = ESP_INTR_FLAG_IRAM;
     #else
         Flags = 0;
@@ -418,12 +468,25 @@ GNSS_Error_t GNSS_Parser_Init(GNSS_Parser_t& p_Parser)
        (uart_set_pin(p_Parser.UART.Interface, UART_PIN_NO_CHANGE, p_Parser.UART.Rx, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE) != ESP_OK)
       )
     {
-        goto GNSS_Parser_Init_Config_Failed;
+        goto GNSS_Parser_Init_UART_Config_Failed;
     }
 
     uart_enable_pattern_det_baud_intr(p_Parser.UART.Interface, '\n', 1, 9, 0, 0);
     uart_pattern_queue_reset(p_Parser.UART.Interface, CONFIG_GNSS_PARSER_UART_QUEUE_LENGTH);
     uart_flush(p_Parser.UART.Interface);
+
+    EventArgs = {
+        .queue_size         = CONFIG_GNSS_PARSER_EVENT_LOOP_QUEUE_SIZE,
+        .task_name          = NULL,
+        .task_priority      = 0,
+        .task_stack_size    = 0,
+        .task_core_id       = 0
+    };
+
+    if(esp_event_loop_create(&EventArgs, &p_Parser.Internal.EventLoop_Handle) != ESP_OK)
+    {
+        goto GNSS_Parser_Init_UART_Config_Failed;
+    }
 
     #ifdef CONFIG_RAK3172_TASK_CORE_AFFINITY
         xTaskCreatePinnedToCore(GNSS_Parser_Event, "GNSS-Parser", CONFIG_GNSS_PARSER_TASK_BUFFER_SIZE, p_Device, CONFIG_GNSS_PARSER_TASK_PRIO, &p_Parser.Internal.Handle, CONFIG_GNSS_PARSER_TASK_CORE);
@@ -433,16 +496,17 @@ GNSS_Error_t GNSS_Parser_Init(GNSS_Parser_t& p_Parser)
 
     if(p_Parser.Internal.Handle == NULL)
     {
-        goto GNSS_Parser_Init_Config_Failed;
+        goto GNSS_Parser_Init_Task_Failed;
     }
 
     p_Parser.Internal.isInitialized = true;
 
-    ESP_LOGI(TAG, "GNSS Parser initialized...");
-
     return GNSS_ERR_OK;
 
-GNSS_Parser_Init_Config_Failed:
+GNSS_Parser_Init_Task_Failed:
+    esp_event_loop_delete(p_Parser.Internal.EventLoop_Handle);
+
+GNSS_Parser_Init_UART_Config_Failed:
     uart_driver_delete(p_Parser.UART.Interface);
 
 GNSS_Parser_Init_Install_Failed:
@@ -451,58 +515,57 @@ GNSS_Parser_Init_Install_Failed:
     return GNSS_ERR_FAIL;
 }
 
-GNSS_Error_t GNSS_Parser_Deinit(GNSS_Parser_t& p_Parser)
+void GNSS_Parser_Deinit(GNSS_Parser_t& p_Parser)
 {
-    if(p_Parser.Internal.isInitialized)
+    if(p_Parser.Internal.isInitialized == false)
     {
-        return GNSS_ERR_OK;
+        return;
     }
 
     vTaskSuspend(p_Parser.Internal.Handle);
     vTaskDelete(p_Parser.Internal.Handle);
+
+    esp_event_loop_delete(p_Parser.Internal.EventLoop_Handle);
 
     if(uart_is_driver_installed(p_Parser.UART.Interface))
     {
         uart_driver_delete(p_Parser.UART.Interface);
     }
 
+    if(p_Parser.Internal.p_Buffer != NULL)
+    {
+        free(p_Parser.Internal.p_Buffer);
+    }
+
+    p_Parser.Internal.isInitialized = false;
+}
+
+GNSS_Error_t GNSS_Parser_AddEvent(GNSS_Parser_t& p_Parser, esp_event_handler_t EventHandler, void* p_EventArgs)
+{
+    if(p_Parser.Internal.isInitialized == false)
+    {
+        return GNSS_ERR_NOT_INITIALIZED;
+    }
+
+    if(esp_event_handler_instance_register_with(p_Parser.Internal.EventLoop_Handle, GNSS_PARSER_EVENT, ESP_EVENT_ANY_ID, EventHandler, p_EventArgs, &p_Parser.Internal.EventLoop_Instance) != ESP_OK)
+    {
+        return GNSS_ERR_FAIL;
+    }
+
     return GNSS_ERR_OK;
 }
 
-/**
- * @brief Add user defined handler for NMEA parser
- *
- * @param nmea_hdl handle of NMEA parser
- * @param event_handler user defined event handler
- * @param handler_args handler specific arguments
- * @return esp_err_t
- *  - ESP_OK: Success
- *  - ESP_ERR_NO_MEM: Cannot allocate memory for the handler
- *  - ESP_ERR_INVALIG_ARG: Invalid combination of event base and event id
- *  - Others: Fail
- */
-esp_err_t nmea_parser_add_handler(nmea_parser_handle_t nmea_hdl, esp_event_handler_t event_handler, void *handler_args)
+GNSS_Error_t GNSS_Parser_RemoveEvent(GNSS_Parser_t& p_Parser, esp_event_handler_t EventHandler)
 {
-    /*
-    GNSS_RT_t *esp_GNSS = (GNSS_RT_t *)nmea_hdl;
-    return esp_event_handler_register_with(_GNSS_Parser_RunTime.event_loop_hdl, ESP_NMEA_EVENT, ESP_EVENT_ANY_ID,
-                                           event_handler, handler_args);*/
-                                return ESP_OK;
-}
+    if(p_Parser.Internal.isInitialized == false)
+    {
+        return GNSS_ERR_NOT_INITIALIZED;
+    }
 
-/**
- * @brief Remove user defined handler for NMEA parser
- *
- * @param nmea_hdl handle of NMEA parser
- * @param event_handler user defined event handler
- * @return esp_err_t
- *  - ESP_OK: Success
- *  - ESP_ERR_INVALIG_ARG: Invalid combination of event base and event id
- *  - Others: Fail
- */
-esp_err_t nmea_parser_remove_handler(nmea_parser_handle_t nmea_hdl, esp_event_handler_t event_handler)
-{/*
-    GNSS_RT_t *esp_GNSS = (GNSS_RT_t *)nmea_hdl;
-    return esp_event_handler_unregister_with(_GNSS_Parser_RunTime.event_loop_hdl, ESP_NMEA_EVENT, ESP_EVENT_ANY_ID, event_handler);*/
-                                return ESP_OK;
+    if(esp_event_handler_instance_unregister_with(p_Parser.Internal.EventLoop_Handle, GNSS_PARSER_EVENT, ESP_EVENT_ANY_ID, p_Parser.Internal.EventLoop_Instance) != ESP_OK)
+    {
+        return GNSS_ERR_FAIL;
+    }
+
+    return GNSS_ERR_OK;
 }

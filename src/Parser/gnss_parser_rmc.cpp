@@ -89,9 +89,9 @@
             // Process date.
             case 9:
             {
-                p_RunTime->Parent.FixDate.Day = GNSS_Parser_ASCII2Digit(p_RunTime->Item + 0);
-                p_RunTime->Parent.FixDate.Month = GNSS_Parser_ASCII2Digit(p_RunTime->Item + 2);
-                p_RunTime->Parent.FixDate.Year = GNSS_Parser_ASCII2Digit(p_RunTime->Item + 4);
+                p_RunTime->Parent.Date.Day = GNSS_Parser_ASCII2Digit(p_RunTime->Item + 0);
+                p_RunTime->Parent.Date.Month = GNSS_Parser_ASCII2Digit(p_RunTime->Item + 2);
+                p_RunTime->Parent.Date.Year = GNSS_Parser_ASCII2Digit(p_RunTime->Item + 4);
 
                 break;
             }

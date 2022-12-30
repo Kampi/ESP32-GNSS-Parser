@@ -20,6 +20,12 @@
 #ifndef GNSS_PARSER_DEFS_H_
 #define GNSS_PARSER_DEFS_H_
 
+#include <string>
+#include <stdint.h>
+
+#include <esp_event.h>
+#include <esp_event_base.h>
+
 #include <driver/gpio.h>
 #include <driver/uart.h>
 
@@ -27,9 +33,6 @@
 #include <freertos/task.h>
 #include <freertos/event_groups.h>
 #include <freertos/queue.h>
-
-#include <string>
-#include <stdint.h>
 
 #include "gnss_parser_errors.h"
 
@@ -43,17 +46,25 @@
  */
 #define GNSS_MAX_SATELLITES_IN_USE                                  12
 
+/** @brief GNSS parser event definitions.
+ */
+typedef enum 
+{
+    GNSS_EVENT_UPDATE,                                              /**< GPS information has been updated. */
+    GNSS_EVENT_UNKNOWN                                              /**< Unknown statements detected. */
+} GNSS_Event_t;
+
 /** @brief GNSS message format definitions.
  */
 typedef enum
 {
     GNSS_FORMAT_UNKNOWN = 0,                                        /**< Unknown message format. */
-    GNSS_FORMAT_GGA,                                                /**< GGA format. */
-    GNSS_FORMAT_GSA,                                                /**< GSA format. */
-    GNSS_FORMAT_RMC,                                                /**< RMC format. */
-    GNSS_FORMAT_GSV,                                                /**< GSV format. */
-    GNSS_FORMAT_GLL,                                                /**< GLL format. */
-    GNSS_FORMAT_VTG                                                 /**< VTG format. */
+    GNSS_FORMAT_GGA = (0x01 << 0x00),                               /**< GGA format. */
+    GNSS_FORMAT_GSA = (0x01 << 0x01),                               /**< GSA format. */
+    GNSS_FORMAT_RMC = (0x01 << 0x02),                               /**< RMC format. */
+    GNSS_FORMAT_GSV = (0x01 << 0x03),                               /**< GSV format. */
+    GNSS_FORMAT_GLL = (0x01 << 0x04),                               /**< GLL format. */
+    GNSS_FORMAT_VTG = (0x01 << 0x05)                               /**< VTG format. */
 } GNSS_Format_t;
 
 /** @brief GNSS fix type definitions.
@@ -113,7 +124,7 @@ typedef struct
     GNSS_Fix_t Fix;                                                 /**< Fix status. */
     uint8_t Satellites;                                             /**< Number of satellites in use. */
     GNSS_Time_t Time;                                               /**< Time in UTC. */
-    GNSS_Date_t FixDate;                                            /**< Fix date. */
+    GNSS_Date_t Date;                                               /**< Fix date. */
     GNSS_FixMode_t FixMode;                                         /**< Fix mode. */
     uint8_t SatsID[GNSS_MAX_SATELLITES_IN_USE];                     /**< ID list of all satellites in use. */
     float dop_h;                                                    /**< Horizontal dilution of precision. */
@@ -139,6 +150,8 @@ typedef struct
     } UART;
     struct
     {
+        uint8_t MessageFilter;                                      /**< Message filter mask.
+                                                                         NOTE: Managed by the driver. */
         TaskHandle_t Handle;                                        /**< Handle for the UART receive task.
                                                                          NOTE: Managed by the driver. */
         QueueHandle_t MessageQueue;                                 /**< Module Rx message queue used by the receiving task.
@@ -147,7 +160,15 @@ typedef struct
                                                                          NOTE: Managed by the driver. */
         uint8_t* p_Buffer;                                          /**< Run time buffer for the UART event loop.
                                                                          NOTE: Managed by the driver. */
+        esp_event_loop_handle_t EventLoop_Handle;                   /**< Event loop handle.
+                                                                         NOTE: Managed by the driver. */
+        esp_event_handler_instance_t EventLoop_Instance;            /**< Event loop handle.
+                                                                         NOTE: Managed by the driver. */
     } Internal;
 } GNSS_Parser_t;
+
+/** @brief Declaration of the event base for the GNSS parser.
+ */
+ESP_EVENT_DECLARE_BASE(GNSS_PARSER_EVENT);
 
 #endif /* GNSS_PARSER_DEFS_H_ */

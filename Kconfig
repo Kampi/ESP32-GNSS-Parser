@@ -37,6 +37,15 @@ menu "GNSS-Parser"
                 Enable this option if you want to use the the VTG parsing option.
     endmenu
 
+    menu "Event loop"
+        config GNSS_PARSER_EVENT_LOOP_QUEUE_SIZE
+            int "Queue size for the event loop"
+            range 8 32
+            default 16
+            help
+                Number of maximum items in the event loop.
+    endmenu
+
     menu "UART"
 		config GNSS_PARSER_UART_IRAM
 			bool "Place ISR in IRAM"

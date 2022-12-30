@@ -20,69 +20,40 @@
 #ifndef GNSS_PARSER_H_
 #define GNSS_PARSER_H_
 
-#include "esp_types.h"
-#include "esp_event.h"
 #include "esp_err.h"
 
 #include "gnss_parser_defs.h"
+#include "gnss_parser_conf.h"
 
-/**
- * @brief Declare of NMEA Parser Event base
- *
+/** @brief Get a message filter for all message formats.
  */
-ESP_EVENT_DECLARE_BASE(ESP_NMEA_EVENT);
+#define GNSS_PARSER_MASK_ALL                        (GNSS_FORMAT_VTG | GNSS_FORMAT_GLL | GNSS_FORMAT_GSV | GNSS_FORMAT_RMC | GNSS_FORMAT_GSA | GNSS_FORMAT_GGA)
 
-/**
- * @brief NMEA Parser Handle
- *
+/** @brief              Initialize the GNSS receiver and the parser.
+ *  @param p_Parser     Pointer to parser object
+ *  @param FilterMask   Message filter mask
+ *  @return             GNSS_ERR_OK when successful
  */
-typedef void *nmea_parser_handle_t;
-
-/**
- * @brief NMEA Parser Event ID
- *
- */
-typedef enum {
-    GNSS_UPDATE, /*!< GNSS information has been updated */
-    GNSS_UNKNOWN /*!< Unknown statements detected */
-} nmea_event_id_t;
-
-/** @brief          Initialize the GNSS receiver and the parser.
- *  @param p_Parser Pointer to parser object
- *  @return         GNSS_ERR_OK when successful
- */
-GNSS_Error_t GNSS_Parser_Init(GNSS_Parser_t& p_Parser);
+GNSS_Error_t GNSS_Parser_Init(GNSS_Parser_t& p_Parser, uint8_t FilterMask);
 
 /** @brief          Deinitialize the GNSS receiver and the parser.
  *  @param p_Parser Pointer to parser object
- *  @return         GNSS_ERR_OK when successful
  */
-GNSS_Error_t GNSS_Parser_Deinit(GNSS_Parser_t& p_Parser);
+void GNSS_Parser_Deinit(GNSS_Parser_t& p_Parser);
 
-/**
- * @brief Add user defined handler for NMEA parser
- *
- * @param nmea_hdl handle of NMEA parser
- * @param event_handler user defined event handler
- * @param handler_args handler specific arguments
- * @return esp_err_t
- *  - ESP_OK: Success
- *  - ESP_ERR_NO_MEM: Cannot allocate memory for the handler
- *  - ESP_ERR_INVALIG_ARG: Invalid combination of event base and event id
- *  - Others: Fail
+/** @brief              Add user defined event handler for GNSS parser.
+ *  @param p_Parser     Pointer to parser object
+ *  @param EventHandler User defined event handler
+ *  @param p_EventArgs  Pointer to handler specific arguments
+ *  @return             GNSS_ERR_OK when successful
  */
-esp_err_t nmea_parser_add_handler(nmea_parser_handle_t nmea_hdl, esp_event_handler_t event_handler, void *handler_args);
+GNSS_Error_t GNSS_Parser_AddEvent(GNSS_Parser_t& p_Parser, esp_event_handler_t EventHandler, void* p_EventArgs);
 
-/**
- * @brief Remove user defined handler for NMEA parser
- *
- * @param nmea_hdl handle of NMEA parser
- * @param event_handler user defined event handler
- * @return esp_err_t
- *  - ESP_OK: Success
- *  - ESP_ERR_INVALIG_ARG: Invalid combination of event base and event id
- *  - Others: Fail
+/** @brief              Remove user defined event handler for GNSS parser.
+ *  @param p_Parser     Pointer to parser object
+ *  @param EventHandler User defined event handler
+ *  @return             GNSS_ERR_OK when successful
  */
-esp_err_t nmea_parser_remove_handler(nmea_parser_handle_t nmea_hdl, esp_event_handler_t event_handler);
+GNSS_Error_t GNSS_Parser_RemoveEvent(GNSS_Parser_t& p_Parser, esp_event_handler_t EventHandler);
 
 #endif /* GNSS_PARSER_H_ */
