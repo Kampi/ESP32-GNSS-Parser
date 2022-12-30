@@ -1,0 +1,105 @@
+menu "GNSS-Parser"
+    menu "Formats"
+        config GNSS_PARSER_FORMAT_GSA
+            bool "Include the GSA format"
+            default n
+            help
+                Enable this option if you want to use the the GSA parsing option.
+
+        config GNSS_PARSER_FORMAT_GSV
+            bool "Include the GSV format"
+            default n
+            help
+                Enable this option if you want to use the the GSV parsing option.
+
+        config GNSS_PARSER_FORMAT_GGA
+            bool "Include the GGA format"
+            default n
+            help
+                Enable this option if you want to use the the GGA parsing option.
+
+        config GNSS_PARSER_FORMAT_RMC
+            bool "Include the RMC format"
+            default n
+            help
+                Enable this option if you want to use the the RMC parsing option.
+
+        config GNSS_PARSER_FORMAT_GLL
+            bool "Include the GLL format"
+            default n
+            help
+                Enable this option if you want to use the the GLL parsing option.
+
+        config GNSS_PARSER_FORMAT_VTG
+            bool "Include the VTG format"
+            default n
+            help
+                Enable this option if you want to use the the VTG parsing option.
+    endmenu
+
+    menu "UART"
+		config GNSS_PARSER_UART_IRAM
+			bool "Place ISR in IRAM"
+			default n
+
+        config GNSS_PARSER_UART_BUFFER_SIZE
+            int "Buffer size"
+            range 256 1024
+            default 512
+            help
+                Buffer size for the UART.
+
+        config GNSS_PARSER_UART_QUEUE_LENGTH
+            int "Queue length"
+            range 4 32
+            default 16
+            help
+                Queue length for the UART receive buffer.
+    endmenu
+
+    menu "FreeRTOS"
+        config GNSS_PARSER_TASK_PRIO
+            int "Receive task priority"
+            range 12 25
+            default 12
+            help
+                Task priority for the UART receive task.
+
+        config GNSS_PARSER_TASK_BUFFER_SIZE
+            int "Buffer size"
+            range 2048 8192
+            default 2048
+            help
+                Buffer size for the UART receive buffer.
+
+        config GNSS_PARSER_TASK_QUEUE_LENGTH
+            int "Queue length"
+            range 4 16
+            default 8
+            help
+                Queue length for the UART receive buffer.
+
+        config GNSS_PARSER_TASK_CORE_USE_AFFINITY
+            bool "Use core affinity"
+            default n
+            help
+                Enable this option if you want to use a specific core for the UART receive task.
+
+        config GNSS_PARSER_TASK_CORE
+            int "Receive task core"
+            depends on GNSS_PARSER_TASK_CORE_USE_AFFINITY
+            range 0 1
+            default 1
+            help
+                Core used by the UART receive task.
+    endmenu
+
+    menu "Misc"
+        config GNSS_PARSER_MISC_ERROR_BASE
+            hex "GNSS-Parser error base definition"
+            range 0 FFFF
+            default 0x8000
+            help
+                Set the error base for the driver.
+    endmenu
+endmenu

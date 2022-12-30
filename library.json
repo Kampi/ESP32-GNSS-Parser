@@ -1,0 +1,25 @@
+{
+	"name": "GNSS-Parser",
+	"version": "1.0.0",
+	"keywords": "esp-idf, GNSS, uart, nmea",
+	"description": "GNSS-Parser for the esp-idf framework.",
+	"repository": {
+		"type": "git",
+		"url": "https://gitlab.server-kampert.de/esp32/libraries/GNSS-parser.git"
+	},
+	"frameworks": "espidf",
+	"platforms": "*",
+	"build": {
+		"flags": [
+			"-Iinclude"
+		],
+		"includeDir": ".",
+		"srcDir": ".",
+		"srcFilter": [
+			"-<*>",
+			"+<src>"
+		]
+	},
+	"dependencies": [
+	]
+}
