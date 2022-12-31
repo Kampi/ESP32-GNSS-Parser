@@ -118,21 +118,21 @@ typedef struct
  */
 typedef struct
 {
-    float Latitude;                                                 /**< Latitude (degrees). */
-    float Longitude;                                                /**< Longitude (degrees). */
-    float Altitude;                                                 /**< Altitude (meters). */
-    GNSS_Fix_t Fix;                                                 /**< Fix status. */
     uint8_t Satellites;                                             /**< Number of satellites in use. */
+    uint8_t SatsID[GNSS_MAX_SATELLITES_IN_USE];                     /**< ID list of all satellites in use. */
+    uint8_t SatsInView;                                             /**< Number of satellites in view. */
+    GNSS_Fix_t Fix;                                                 /**< Fix status. */
     GNSS_Time_t Time;                                               /**< Time in UTC. */
     GNSS_Date_t Date;                                               /**< Fix date. */
     GNSS_FixMode_t FixMode;                                         /**< Fix mode. */
-    uint8_t SatsID[GNSS_MAX_SATELLITES_IN_USE];                     /**< ID list of all satellites in use. */
-    float dop_h;                                                    /**< Horizontal dilution of precision. */
-    float dop_p;                                                    /**< Position dilution of precision.  */
-    float dop_v;                                                    /**< Vertical dilution of precision.  */
-    uint8_t SatsInView;                                             /**< Number of satellites in view. */
     GNSS_Satellite_t SatDescriptions[GNSS_MAX_SATELLITES_IN_VIEW];  /**< Information of satellites in view. */
-    bool Valid;                                                     /**< GNSS validity. */
+    bool isValid;                                                   /**< GNSS validity. */
+    float Latitude;                                                 /**< Latitude (degrees). */
+    float Longitude;                                                /**< Longitude (degrees). */
+    float Altitude;                                                 /**< Altitude (meters). */
+    float DoP_H;                                                    /**< Horizontal dilution of precision. */
+    float DoP_P;                                                    /**< Position dilution of precision. */
+    float DoP_V;                                                    /**< Vertical dilution of precision. */
     float Speed;                                                    /**< Ground speed (m/s). */
     float CoG;                                                      /**< Course over ground. */
     float Variation;                                                /**< Magnetic variation. */

@@ -42,9 +42,9 @@ static void GPS_EventHandler(void* p_EventHandler_Arg, esp_event_base_t EventBas
         {
             Data = (GNSS_Data_t*)p_EventData;
 
-            ESP_LOGI(TAG, "%d/%d/%d %d:%d:%d => \r\n"
+            ESP_LOGI(TAG, "%02d/%02d/%02d %02d:%02d:%02d => \r\n"
                     "\t\t\t\t\t\tLatitude   = %.05f°N\r\n"
-                    "\t\t\t\t\t\tLongitude = %.05f°E\r\n"
+                    "\t\t\t\t\t\tLongitude  = %.05f°E\r\n"
                     "\t\t\t\t\t\tAltitude   = %.02fm\r\n"
                     "\t\t\t\t\t\tSpeed      = %fm/s",
                     Data->Date.Year + 2000, Data->Date.Month, Data->Date.Day,
@@ -55,7 +55,7 @@ static void GPS_EventHandler(void* p_EventHandler_Arg, esp_event_base_t EventBas
         }
         case GNSS_EVENT_UNKNOWN:
         {
-            ESP_LOGW(TAG, "Unknown statement:%s", (char*)p_EventData);
+            ESP_LOGW(TAG, "Unknown statement: %s", (char*)p_EventData);
 
             break;
         }

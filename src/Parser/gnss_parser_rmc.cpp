@@ -34,7 +34,7 @@
             // Process valid status.
             case 2:
             {
-                p_RunTime->Parent.Valid = (p_RunTime->Item[0] == 'A');
+                p_RunTime->Parent.isValid = (p_RunTime->Item[0] == 'A');
 
                 break;
             }

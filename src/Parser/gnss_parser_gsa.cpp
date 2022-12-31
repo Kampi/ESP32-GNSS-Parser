@@ -34,21 +34,21 @@
             // Process PDOP.
             case 15:
             {
-                p_RunTime->Parent.dop_p = strtof(p_RunTime->Item, NULL);
+                p_RunTime->Parent.DoP_P = strtof(p_RunTime->Item, NULL);
 
                 break;
             }
             // Process HDOP.
             case 16:
             {
-                p_RunTime->Parent.dop_h = strtof(p_RunTime->Item, NULL);
+                p_RunTime->Parent.DoP_H = strtof(p_RunTime->Item, NULL);
 
                 break;
             }
             // Process VDOP.
             case 17:
             {
-                p_RunTime->Parent.dop_v = strtof(p_RunTime->Item, NULL);
+                p_RunTime->Parent.DoP_V = strtof(p_RunTime->Item, NULL);
 
                 break;
             }

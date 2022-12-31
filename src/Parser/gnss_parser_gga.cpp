@@ -80,7 +80,7 @@
             // Process HDOP.
             case 8:
             {
-                p_RunTime->Parent.dop_h = strtof(p_RunTime->Item, NULL);
+                p_RunTime->Parent.DoP_H = strtof(p_RunTime->Item, NULL);
 
                 break;
             }
